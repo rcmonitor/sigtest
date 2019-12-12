@@ -20,9 +20,9 @@ func init() {
 
 	strWD, err := os.Getwd()
 	if nil != err {
-		l.WithField("Working directory", strWD).Info("init")
-	}else{
 		l.Error(err)
+	}else{
+		l.WithField("Working directory", strWD).Info("init")
 	}
 }
 
