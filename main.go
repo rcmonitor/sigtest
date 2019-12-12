@@ -68,7 +68,7 @@ func fInitLogger() {
 }
 
 func fHandleSignal(sigIncoming os.Signal) {
-	l.Info("Signal %s", sigIncoming.String())
+	l.WithField("Signal", sigIncoming.String()).Info("Gon incoming", )
 	switch sigIncoming {
 	case syscall.SIGTERM:
 		l.Info("Got Termination signal, finalizing")
