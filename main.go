@@ -13,7 +13,7 @@ type TData struct {
 }
 
 func init() {
-	l.Info("msg")
+	fInitLogger()
 }
 
 
@@ -49,4 +49,14 @@ func mainRoutine(i int) {
 		}).Info("Cycle")
 
 		time.Sleep(2 * time.Second)
+}
+
+func fInitLogger() {
+	fLog, err := os.OpenFile("/var/log/sigtest/sigtest.log",
+		os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err == nil {
+		l.SetOutput(fLog)
+	} else {
+		l.Info("Failed to log to file, using default stderr")
+	}
 }
