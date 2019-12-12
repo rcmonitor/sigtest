@@ -54,6 +54,7 @@ func mainLoop(cSignal chan os.Signal, d *TData) {
 func mainRoutine(i int) {
 		l.WithFields(l.Fields{
 			"Step": i,
+			"Delay": delay,
 		}).Info("Cycle")
 
 		time.Sleep(time.Duration(delay) * time.Second)
