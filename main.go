@@ -94,7 +94,10 @@ func fLoadConfig() {
 func fGetDelay() (intDelay int) {
 	intDelay = 2
 	strDelay := os.Getenv("SIGTEST_DELAY")
-	if "" == strDelay { return }
+	if "" == strDelay {
+		l.Info("no '$SIGTEST_DELAY' provided")
+		return
+	}
 	intTemp, err := strconv.ParseInt(strDelay, 10, 0)
 	if nil != err {
 		l.Error("please, provide $SIGTEST_DELAY in numeric format")
