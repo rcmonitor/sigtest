@@ -4,6 +4,7 @@ import (
 	l "github.com/sirupsen/logrus"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 )
@@ -14,10 +15,12 @@ type TData struct {
 }
 
 func init() {
+	fLoadConfig()
 	fInitLogger()
 }
 
 var GitCommit, BuildDate, Version string
+var delay int
 
 func main() {
 
@@ -40,8 +43,7 @@ func mainLoop(cSignal chan os.Signal, d *TData) {
 		d.Counter ++
 		select {
 		case sigIncoming := <-cSignal:
-			fHandleSignal(sigIncoming)
-			os.Exit(0)
+			if !fHandleSignal(sigIncoming) { os.Exit(0) }
 
 		default:
 			mainRoutine(d.Counter)
@@ -54,7 +56,7 @@ func mainRoutine(i int) {
 			"Step": i,
 		}).Info("Cycle")
 
-		time.Sleep(2 * time.Second)
+		time.Sleep(time.Duration(delay) * time.Second)
 }
 
 func fInitLogger() {
@@ -67,15 +69,36 @@ func fInitLogger() {
 	}
 }
 
-func fHandleSignal(sigIncoming os.Signal) {
+func fHandleSignal(sigIncoming os.Signal) (bContinue bool) {
 	l.WithField("Signal", sigIncoming.String()).Info("Got incoming", )
 	switch sigIncoming {
 	case syscall.SIGTERM:
 		l.Info("Got Termination signal, finalizing")
 	case syscall.SIGHUP:
-		l.Info("Got Reload signal, let's read the config again")
+		l.Info("Got Reload signal")
+		fLoadConfig()
+		bContinue = true
 
 	default:
 		l.Info("Unknown signal, quit")
 	}
+
+	return
+}
+
+func fLoadConfig() {
+	l.Info("Loading configuration")
+	delay = fGetDelay()
+}
+
+func fGetDelay() (intDelay int) {
+	intDelay = 2
+	strDelay := os.Getenv("SIGTEST_DELAY")
+	if "" == strDelay { return }
+	intTemp, err := strconv.ParseInt(strDelay, 10, 0)
+	if nil != err {
+		l.Error("please, provide $SIGTEST_DELAY in numeric format")
+	}else{ intDelay = int(intTemp) }
+
+	return
 }
