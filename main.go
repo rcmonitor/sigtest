@@ -17,6 +17,13 @@ type TData struct {
 func init() {
 	fLoadConfig()
 	fInitLogger()
+
+	strWD, err := os.Getwd()
+	if nil != err {
+		l.WithField("Working directory", strWD).Info("init")
+	}else{
+		l.Error(err)
+	}
 }
 
 var GitCommit, BuildDate, Version string
@@ -93,6 +100,8 @@ func fLoadConfig() {
 }
 
 func fGetDelay() (intDelay int) {
+
+
 	intDelay = 2
 	strDelay := os.Getenv("SIGTEST_DELAY")
 	if "" == strDelay {
