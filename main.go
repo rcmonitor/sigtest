@@ -4,6 +4,7 @@ import (
 	l "github.com/sirupsen/logrus"
 	"os"
 	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -16,9 +17,16 @@ func init() {
 	fInitLogger()
 }
 
-
+var GitCommit, BuildDate, Version string
 
 func main() {
+
+	l.WithFields(l.Fields{
+		"Commit": GitCommit,
+		"Build Date": BuildDate,
+		"Version": Version,
+	}).Info()
+
 	d := &TData{}
 
 	cSignal := make(chan os.Signal, 1)
@@ -32,9 +40,7 @@ func mainLoop(cSignal chan os.Signal, d *TData) {
 		d.Counter ++
 		select {
 		case sigIncoming := <-cSignal:
-			l.WithFields(l.Fields{
-				"Signal": sigIncoming.String(),
-			}).Warn("Interrupted")
+			fHandleSignal(sigIncoming)
 			os.Exit(0)
 
 		default:
@@ -58,5 +64,16 @@ func fInitLogger() {
 		l.SetOutput(fLog)
 	} else {
 		l.Info("Failed to log to file, using default stderr")
+	}
+}
+
+func fHandleSignal(sigIncoming os.Signal) {
+	l.Info("Signal %s", sigIncoming.String())
+	switch sigIncoming {
+	case syscall.SIGTERM:
+		l.Info("Got Termination signal, finalizing")
+
+	default:
+		l.Info("Unknown signal, quit")
 	}
 }
