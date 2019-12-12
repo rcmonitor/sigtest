@@ -72,6 +72,8 @@ func fHandleSignal(sigIncoming os.Signal) {
 	switch sigIncoming {
 	case syscall.SIGTERM:
 		l.Info("Got Termination signal, finalizing")
+	case syscall.SIGHUP:
+		l.Info("Got Reload signal, let's read the config again")
 
 	default:
 		l.Info("Unknown signal, quit")
