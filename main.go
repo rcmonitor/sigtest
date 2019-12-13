@@ -2,9 +2,9 @@ package main
 
 import (
 	l "github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 	"os"
 	"os/signal"
-	"strconv"
 	"syscall"
 	"time"
 )
@@ -15,19 +15,17 @@ type TData struct {
 }
 
 func init() {
-	fLoadConfig()
 	fInitLogger()
 
-	strWD, err := os.Getwd()
-	if nil != err {
-		l.Error(err)
-	}else{
-		l.WithField("Working directory", strWD).Info("init")
-	}
+	fInitConfig()
+
+	fGetConfig()
+
 }
 
 var GitCommit, BuildDate, Version string
 var delay int
+var workingDir string
 
 func main() {
 
@@ -82,9 +80,10 @@ func fHandleSignal(sigIncoming os.Signal) (bContinue bool) {
 	switch sigIncoming {
 	case syscall.SIGTERM:
 		l.Info("Got Termination signal, finalizing")
+	//	temporarily add SIGINT to handle "Ctrl + C" as reload command
 	case syscall.SIGHUP:
 		l.Info("Got Reload signal")
-		fLoadConfig()
+		fGetConfig()
 		bContinue = true
 
 	default:
@@ -94,24 +93,34 @@ func fHandleSignal(sigIncoming os.Signal) (bContinue bool) {
 	return
 }
 
-func fLoadConfig() {
+func fInitConfig() {
 	l.Info("Loading configuration")
-	delay = fGetDelay()
+
+	var err error
+	workingDir, err = os.Getwd()
+	if nil != err {
+		l.Error(err)
+	}else{
+		l.WithField("Working directory", workingDir).Info("init")
+	}
+
+
+	viper.SetConfigName("config")
+	viper.AddConfigPath(".")
+	viper.AddConfigPath(workingDir)
+	viper.SetConfigType("hcl")
+	viper.SetDefault("delay", 2)
+
+
 }
 
-func fGetDelay() (intDelay int) {
+func fGetConfig() () {
 
+	err := viper.ReadInConfig()
 
-	intDelay = 2
-	strDelay := os.Getenv("SIGTEST_DELAY")
-	if "" == strDelay {
-		l.Info("no '$SIGTEST_DELAY' provided")
-		return
-	}
-	intTemp, err := strconv.ParseInt(strDelay, 10, 0)
 	if nil != err {
-		l.Error("please, provide $SIGTEST_DELAY in numeric format")
-	}else{ intDelay = int(intTemp) }
+		l.Error(err)
+	}
 
-	return
+	delay = viper.GetInt("delay")
 }
