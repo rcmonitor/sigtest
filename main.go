@@ -44,7 +44,7 @@ func main() {
 }
 
 func mainLoop(cSignal chan os.Signal, d *TData) {
-	for true {
+	for {
 		d.Counter ++
 		select {
 		case sigIncoming := <-cSignal:
